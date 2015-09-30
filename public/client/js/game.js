@@ -245,6 +245,7 @@ mainState.prototype = {
   update: function () {
 
     //Phaser physics command - dictates that players will collide with one another, not pass through.
+
     game.physics.arcade.collide(players);
 
     //Kills any projectile that hits a platform.
