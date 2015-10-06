@@ -22,6 +22,7 @@ exports.helpers = {
 // sent to the '/' path.
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/public/client/index.html');
+  globals.gameInProgress = false;
 });
 
 
@@ -41,6 +42,7 @@ app.use('/controller', express.static(path.join(__dirname, 'public/controller'))
 //Creates globals object, which will store socket IDs of first 4 ready players.
 var globals = {};
 globals.currentPlayers = [];
+globals.gameInProgress = false;
 
 
 /*****************************
@@ -134,7 +136,7 @@ function playerShot(data){
 //If so, emits "client start" event to all connected sockets.
 //Game view client will flip from "Lobby" state into "Main" state when it hears this event.
 function onPlayerStart(){
-  if(globals.currentPlayers.length > 1){
+  if(globals.currentPlayers.length > 1 && globals.gameInProgress !== true){
     io.sockets.emit("client start",{});
   }
 };
@@ -149,6 +151,7 @@ function onGameOver(data){
 //Emits "reset controllers" event, which will send controllers back to controller "Lobby" state.
 function onResetGame(){
   io.sockets.emit("reset controllers",{});
+  globals.gameInProgress = false;
 };
 
 
@@ -158,13 +161,15 @@ function onNewPlayer() {
 
   if (globals.currentPlayers.length < 4){
 
-    if (globals.currentPlayers.indexOf(this.id) === -1){
+    if (globals.currentPlayers.indexOf(this.id) === -1 && globals.gameInProgress !== true){
       globals.currentPlayers.push(this.id);
       var playerNumber = exports.helpers.findArrayIndex(this.id, globals.currentPlayers) + 1;
 
       io.to(this.id).emit("confirm player", {id: this.id, playerNumber: playerNumber, message: "You are player " + playerNumber});
 
       console.log("New player added, all players:", globals.currentPlayers);      
+    }else{
+      io.to(this.id).emit("reject player", {id: this.id, playerNumber: false, message: "Sorry, game already in progress"});
     }
 
   }else{
@@ -179,6 +184,8 @@ function onNewPlayer() {
 //controller. Also emits "flip controllers" event to all connected sockets. This will cause any
 //controller in "Waiting" (ready) state to flip into "Main" (game pad) state.
 function onGameStarted() {
+
+  globals.gameInProgress = true;
 
   for (var i = 0; i < globals.currentPlayers.length; i++){
     this.emit("new player", {id: globals.currentPlayers[i],playerNumber: i+1});
