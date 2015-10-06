@@ -24,8 +24,8 @@ gameOver.prototype = {
 
     var gameOverTitle = this.game.add.sprite(game.world.width * (1/2), game.world.height * (1/3),'gameover');
     gameOverTitle.anchor.setTo(0.5,0.5);
-    //This button is currently inactive. The change from the "lobby" state to the "main" game state is triggered 
-    //from the server as described above.
+    //This button is currently inactive. The change from the "game over" state to the "lobby" game state is triggered 
+    //by the setTimeout function below.
     var playButton = this.game.add.button(game.world.width * (1/2), game.world.height * (2/3),"play",null,this);
     playButton.anchor.setTo(0.5,0.5);
 
